@@ -5,11 +5,11 @@ import java.util.Set;
 public class Game {
     private Word word;
     private HangmanStage currentStage;
-    private final int maxAttempts = 6;
+    private final int maxAttempts = HangmanStage.values().length - 1;
     private int wrongAttempts;
     private final Scanner textScanner = new Scanner(System.in);
-    private HashSet<Character> guesses;
-    private HashSet<Character> wrongGuesses;
+    private Set<Character> guesses;
+    private Set<Character> wrongGuesses;
 
     /// Инициализация игры, запрос имени, выбор слова, начало цикла
     void start() {
@@ -17,7 +17,7 @@ public class Game {
         currentStage = HangmanStage.STAGE0;
         wrongAttempts = 0;
         guesses = HashSet.newHashSet(20);
-        wrongGuesses = HashSet.newHashSet(20);
+        wrongGuesses = HashSet.newHashSet(7);
 
         while (wrongAttempts < maxAttempts && word.getMaskedWord().contains("_")) {
             printCurrentState();
@@ -29,22 +29,27 @@ public class Game {
 
     /// Одна итерация: запрос буквы и передача в функцию проверки и обновления
     void playRound() {
-        System.out.print("Введите букву: ");
-        char guess = textScanner.nextLine().charAt(0);
-        if (isCharCorrect(guess)) {
-            makeGuess(guess);
-        } else {
-            System.out.println("Подходящими являются буквы Кириллического алфавита в нижнем регистре!");
-            playRound();
+        char guess = 0;
+        while (!isCharCorrect(guess)) {
+            if (guess != 0)
+                System.out.println("Подходящими являются буквы Кириллического алфавита в нижнем регистре!");
+            try {
+                System.out.print("Введите букву: ");
+                String curr = textScanner.nextLine();
+                if (curr.length() > 1) continue;
+                guess = curr.charAt(0);
+            } catch (Exception _) {}
         }
-
+        makeGuess(guess);
     }
 
 
     /// Отображение текущего состояния слова и изображения виселицы
     void printCurrentState() {
         System.out.println(currentStage.getRepresentation());
-        System.out.println( "Текущее слово: " + word.getMaskedWord());
+        System.out.printf("Текущее слово: %s",word.getMaskedWord());
+        if (!wrongGuesses.isEmpty()) System.out.printf(" (неверно: %s)",wrongGuesses);
+        System.out.println();
     }
 
 
@@ -64,7 +69,6 @@ public class Game {
                 wrongAttempts++;
                 currentStage = currentStage.nextStage();
             }
-
         }
     }
 
@@ -78,7 +82,9 @@ public class Game {
 
     /// Проверка на полное угадывание
     boolean hasFullGuessed() {
-        return guesses.equals(Set.of(word.getWord()));
+        Set<Character> charSet = new HashSet<>();
+        for (Character c : word.getWord().toCharArray()) charSet.add(c);
+        return guesses.equals(charSet);
     }
 
 
@@ -102,13 +108,14 @@ public class Game {
 
 
     void oneMoreGame() {
-        System.out.print("Начать новую игру (да/нет) ? ");
-        switch (textScanner.nextLine()) {
-            case "да" -> start();
-            case "нет" -> System.out.println();
-            default -> oneMoreGame();
+        String answer = "";
+        while (!(answer.equalsIgnoreCase("да") || answer.equalsIgnoreCase("нет"))) {
+            System.out.print("Начать новую игру (да/нет) ? ");
+            answer = textScanner.nextLine();
         }
-
-
+        switch (answer) {
+            case "да" -> start();
+            case "нет" -> {}
+        }
     }
 }

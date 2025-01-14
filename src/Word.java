@@ -13,17 +13,13 @@ public class Word {
     private int wordLength;
 
     Word() {
-        try {
-            File file = new File("russian_nouns.txt");
-            Scanner fileScanner = new Scanner(file);
+        try (Scanner fileScanner = new Scanner(new File("russianNouns.txt"))) {
             words = new ArrayList<>();
             while (fileScanner.hasNextLine()) {
                 words.add(fileScanner.nextLine());
             }
-            fileScanner.close();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
-
         }
 
         randomizer = new Random();
